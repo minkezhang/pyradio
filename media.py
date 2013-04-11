@@ -1,6 +1,5 @@
-# Ubuntu 12.10
-# sudo apt-get install ffmpeg libavcodec-extra-53
-# sudo apt-get install espeak
+# media definitions
+# currently, only supports audio formats
 
 from misc import DEVNULL
 
@@ -13,6 +12,7 @@ class SeekError(Exception):
 
 # wrapper to handle broadcasting status messages
 class Status():
+
 	def __init__(self, file, msg = None):
 		self.file = file
 		if(not(msg)):
@@ -21,11 +21,12 @@ class Status():
 			# slows down message replay
 			self.msg = ',, '.join(msg.split(' '))
 		self.save()
+
 	# returns a time status
 	@staticmethod
 	def time():
 		from time import localtime, strftime
-		base = 'time, announcement,, it,, is,, now,,'
+		base = 'time, announcement,,, it,, is,, now,,'
 		h = str(int(strftime('%I', localtime())))
 		m = str(int(strftime('%M', localtime())))
 		if(int(m) < 10):
@@ -33,6 +34,7 @@ class Status():
 		# half-day (AM, PM)
 		d = '.'.join(list(strftime('%p', localtime())))
 		return('%s %s; %s; %s.' % (base, h, m, d))
+
 	# saves audio file to a temporary file
 	def save(self):
 		echo = Popen([ 'echo', self.msg ], stdout = PIPE)
@@ -42,11 +44,13 @@ class Status():
 		fp = open(self.file, 'w')
 		fp.write(stdout)
 		fp.close()
+
 	def delete(self):
 		from os import remove
 		remove(self.file)
 
 class Media():
+
 	def __init__(self, file):
 		self.file = file
 		self.duration = 0
@@ -77,7 +81,6 @@ class Media():
 		# this may need to be changed in the future for video support
 		return('%s -- %s (%s) : %s' % (self.tags['title'], self.tags['artist'], self.tags['album'], self.duration))
 
-	
 	# tests if file exists
 	def exist(self):
 		with open(self.file):

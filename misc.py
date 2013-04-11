@@ -1,7 +1,3 @@
-# Ubuntu 12.10
-# sudo apt-get install ffmpeg libavcodec-extra-53
-# sudo apt-get install espeak
-
 from subprocess import Popen
 
 DEVNULL = open('/dev/null', 'w')
