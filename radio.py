@@ -31,11 +31,11 @@ class Radio():
 	# starts a radio stream, continuously broadcasts media
 	def stream(self):
 
-		(r, w) = self.PIPE
-		self.wfp = fdopen(w, 'w')
-
-		(a, b) = self.PIPE2
-		self.wfp2 = fdopen(b, 'w')
+		# pipe method
+		# (r, w) = self.PIPE
+		# self.wfp = fdopen(w, 'w')
+		# (a, b) = self.PIPE2
+		# self.wfp2 = fdopen(b, 'w')
 
 		from random import random
 		while(self.queue):
@@ -93,17 +93,17 @@ class Radio():
 
 		try:
 			data = fp.read(buffer)
-			from time import sleep
 			while(data):
 				try:
-					# defaults to stdout if no connection
 					from sys import stderr
-					stderr.write('sending')
+					stderr.write('sending to client...\n')
 					self.s.sendto(data, ('<broadcast>', 50000))
-					sleep(2)
-#					self.wfp.write(data)
-#					self.wfp2.write(data)
-					print(data)
+					# pipe method
+					# self.wfp.write(data)
+					# self.wfp2.write(data)
+					# defaults to stdout if no connection
+					# print(data)
+					stderr.write('sent data\n')
 				except OSError:
 					print('oserror')
 				data = fp.read(buffer)
@@ -126,10 +126,11 @@ class Radio():
 			exit(0)
 
 q = [
-		'/home/mzhang/Downloads/renmd.mp3',
-		'/usr/share/sounds/alsa/Front_Center.wav',
-		'/usr/share/sounds/alsa/Front_Center.wav',
-		'/usr/share/sounds/alsa/Front_Center.wav' ]
+		# socket.error: [Errno 11] Resource temporarily unavailable
+		'/home/mzhang/Downloads/renmd.mp3', ]
+#		'/usr/share/sounds/alsa/Front_Center.wav', ]
+#		'/usr/share/sounds/alsa/Front_Center.wav',
+#		'/usr/share/sounds/alsa/Front_Center.wav' ]
 
 def test():
 	q = [
