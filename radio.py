@@ -22,21 +22,22 @@ class Radio():
 	# add a client
 	# client is written to during self.broadcast()
 	def add(self, client, connection):
-		self.clients[client] = connection
+		(r, w) = connection
+		self.clients[client] = (fdopen(r, 'r'), fdopen(w, 'w'))
+
+	# returns a client connection
+	def reference(self, client):
+		return(self.clients[client])
 
 	# drop a client
 	def drop(self, client):
+		(r, w) = self.reference(client)
+		r.close()
+		w.close()
 		del self.clients[client]
 
 	# starts a radio stream, continuously broadcasts media
 	def stream(self):
-
-		# pipe method
-		# (r, w) = self.PIPE
-		# self.wfp = fdopen(w, 'w')
-		# (a, b) = self.PIPE2
-		# self.wfp2 = fdopen(b, 'w')
-
 		from random import random
 		while(self.queue):
 			if(random() > 0.85):
@@ -52,7 +53,16 @@ class Radio():
 
 	# shuts down the radio
 	def stop(self):
-		exit(0)
+		for client in self.clients:
+			self.drop(client)
+		return()
+
+	def write(self, client, data):
+		(r, w) = self.reference(client)
+		try:
+			w.write(data)
+		except IOError:
+			self.drop(client)
 
 	# streams a single song
 	# perhaps add seek support in the future, for media on-demand
@@ -91,19 +101,18 @@ class Radio():
 		# file pointer to media
 		fp = fdopen(r, 'r')
 
+		# ready to import
+		from multiprocessing import Process
+		from threading import Thread
+		from sys import stderr
+
 		try:
 			data = fp.read(buffer)
 			while(data):
 				try:
-					from sys import stderr
-					stderr.write('sending to client...\n')
-					self.s.sendto(data, ('<broadcast>', 50000))
-					# pipe method
-					# self.wfp.write(data)
-					# self.wfp2.write(data)
-					# defaults to stdout if no connection
-					# print(data)
-					stderr.write('sent data\n')
+					if(self.clients):
+						for client in self.clients:
+							Thread(target = self.write, args = (client, data)).start()
 				except OSError:
 					print('oserror')
 				data = fp.read(buffer)
