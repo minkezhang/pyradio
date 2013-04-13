@@ -21,8 +21,9 @@ class Radio():
 
 	# add a client
 	# client is written to during self.broadcast()
-	def add(self, client, connection):
-		(r, w) = connection
+	def add(self, client):
+		from os import pipe
+		(r, w) = pipe()
 		self.clients[client] = (fdopen(r, 'r'), fdopen(w, 'w'))
 
 	# returns a client connection
@@ -31,10 +32,11 @@ class Radio():
 
 	# drop a client
 	def drop(self, client):
-		(r, w) = self.reference(client)
-		r.close()
-		w.close()
-		del self.clients[client]
+		pass
+#		(r, w) = self.reference(client)
+#		r.close()
+#		w.close()
+#		del self.clients[client]
 
 	# starts a radio stream, continuously broadcasts media
 	def stream(self):
@@ -61,8 +63,9 @@ class Radio():
 		(r, w) = self.reference(client)
 		try:
 			w.write(data)
+			print('send data to %s' % (str(client)))
 		except IOError:
-			self.drop(client)
+			pass
 
 	# streams a single song
 	# perhaps add seek support in the future, for media on-demand
@@ -110,9 +113,8 @@ class Radio():
 			data = fp.read(buffer)
 			while(data):
 				try:
-					if(self.clients):
-						for client in self.clients:
-							Thread(target = self.write, args = (client, data)).start()
+					for client in self.clients:
+						Thread(target = self.write, args = (client, data)).start()
 				except OSError:
 					print('oserror')
 				data = fp.read(buffer)
@@ -136,10 +138,10 @@ class Radio():
 
 q = [
 		# socket.error: [Errno 11] Resource temporarily unavailable
-		'/home/mzhang/Downloads/renmd.mp3', ]
-#		'/usr/share/sounds/alsa/Front_Center.wav', ]
-#		'/usr/share/sounds/alsa/Front_Center.wav',
-#		'/usr/share/sounds/alsa/Front_Center.wav' ]
+		'/home/mzhang/Downloads/renmd.mp3',
+		'/usr/share/sounds/alsa/Front_Center.wav',
+		'/usr/share/sounds/alsa/Front_Center.wav',
+		'/usr/share/sounds/alsa/Front_Center.wav' ]
 
 def test():
 	q = [

@@ -1,64 +1,60 @@
 from radio import Radio, q
-from threading import Thread
-from misc import error
 
-rad = Radio(q)
+from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
+import SocketServer
 
-# the radio streams in background
-Thread(target = rad.stream).start()
+class Server(SocketServer.ThreadingMixIn, HTTPServer):
+# class Server(SocketServer.ThreadingMixIn, HTTPServer):
+	def __init__(self):
+		from threading import Thread
 
-from os import pipe
-rad.add(('127.0.0.1', '50010'), pipe())
-rad.add(('127.0.0.1', '50011'), pipe())
+		self.host = 'localhost'
+		self.port = 8080
 
-def tmp(client):
-	(r, w) = rad.reference(client)
-	while(True):
-		print(r.read(128 * 1024))
+		# create a server with custom handler binding
+                SocketServer.TCPServer.__init__(self, (self.host, self.port), RequestHandler)
 
-tmp(('127.0.0.1', '50010'))
+		self.radio = Radio(q)
+		Thread(target = self.radio.stream).start()
 
-# pipe method
-# from os import pipe			# ignore
-# (e, w) = pipe()			# ignore
-# r.PIPE = (e, w)			# ignore
-# (a, b) = pipe()			# ignore
-# r.PIPE2 = (a, b)			# ignore
+	# add a client to the radio client list
+	# client is in the form of a (host, port) tuple
+	def add(self, client):
+		# associates a pipe to a particular client
+		# radio.broadcast() will stream to all pipes, which can be accessed from the request handler
+		self.radio.add(client)
 
-# sock method
-# Send UDP broadcast packets
-## import sys, time
-## from socket import *
-## s = socket(AF_INET, SOCK_DGRAM)
-## s.bind(('', 0))
-## s.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
-## s.setblocking(0)
-## r.s = s
+	# returns the associated pipe to the client
+	def reference(self, client):
+		return(self.radio.reference(client))
 
-# pipe method
-# from os import fdopen			# ignore
-# rfp = fdopen(e, 'r')			# ignore
-# rfp2 = fdopen(a, 'r')			# ignore
+class RequestHandler(SocketServer.StreamRequestHandler):#, BaseHTTPRequestHandler):
 
-## import select
-## port = 50000
-## buff = 4 * 1024
-## s = socket(AF_INET, SOCK_DGRAM)
-## s.bind(('<broadcast>', port))
-## s.setblocking(0)
+	def handle(self):
+		self.server.add(self.client_address)
+		SocketServer.StreamRequestHandler.handle(self)
+		# BaseHTTPRequestHandler.handle(self)
 
-## from sys import stderr
-## from time import sleep
-## while(True):
-	## stderr.write('reading from server...\n')
-	### msg = s.recv(bufferSize)
-	## result = select.select([s],[],[])
-	## msg = result[0][0].recv(buff) 
-	## print(msg)
-	## stderr.write('read data\n')
+#	def do_GET(self):
+#		self.send_response(200)
+#		self.send_header('Content-Type', 'audio/mpeg')
+#		self.end_headers()
 
-# pipe method
-# data = rfp.read(128 * 1024)
-# while(data):
-#	print(data)
-#	data = rfp.read(128 * 1024)
+		try:
+			(r, w) = self.server.reference(self.client_address)
+			data = r.read(128 * 1024)
+			while(data):
+				self.wfile.write(data)
+				self.wfile.flush()
+				data = r.read(128 * 1024)
+		except IOError:
+			pass
+
+		return()
+
+if(__name__ == '__main__'):
+	Server().serve_forever()
+#	try:
+#		a.serve_forever()
+#	except KeyboardInterrupt:
+#		a.shutdown()

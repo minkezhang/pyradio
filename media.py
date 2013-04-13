@@ -101,5 +101,5 @@ class Media():
 		#	http://bit.ly/ZDIO6B
 		# seeking with ffmpeg
 		#	http://bit.ly/Tv0mMP
-		call = Popen([ 'ffmpeg', '-ss', str(offset), '-i', self.file, '-f', 'mp3', '-' ], stderr = DEVNULL, stdout = fdopen(w, 'w'))
+		call = Popen([ 'ffmpeg', '-ss', str(offset), '-re', '-i', self.file, '-f', 'mp3', '-' ], stderr = DEVNULL, stdout = fdopen(w, 'w'))
 		return(call)
