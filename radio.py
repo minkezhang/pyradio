@@ -60,10 +60,11 @@ class Radio():
 		return()
 
 	def write(self, client, data):
+		from sys import stderr
+		stderr.write('current clients: %s\n' % (str(self.clients.keys())))
 		(r, w) = self.reference(client)
 		try:
 			w.write(data)
-			print('send data to %s' % (str(client)))
 		except IOError:
 			pass
 
